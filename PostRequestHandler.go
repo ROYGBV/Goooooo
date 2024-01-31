@@ -8,6 +8,13 @@ import (
 	"net/http"
 )
 
+// Структура тела запроса
+type Request struct {
+	Url    string `json:"url"`
+	Method string `json:"method"`
+	Body   string `json:"body"`
+}
+
 func makeRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// Проверка на то, отправлен ли POST запрос от клиента
 	if r.Method != http.MethodPost {
@@ -23,29 +30,27 @@ func makeRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Извлечение параметров из тела запроса
-	var decodedData map[string]interface{}
+	var decodedData Request
 	err = json.Unmarshal(rBody, &decodedData)
 	if err != nil {
 		http.Error(w, "Ошибка извлечения параметров из тела запроса", http.StatusBadRequest)
 		return
 	}
-	url, urlExists := decodedData["url"].(string)
-	method, methodExists := decodedData["method"].(string)
-	jsonMessageStr, messageExists := decodedData["body"].(string)
 
 	// Проверка наличия url и method
-	if !urlExists {
+	if decodedData.Url == "" {
 		http.Error(w, "Отсутствие параметра 'url' в запросе.", http.StatusBadRequest)
 		return
 	}
-	if !methodExists {
+	if decodedData.Method == "" {
 		http.Error(w, "Отсутствие параметра 'method' в запросе.", http.StatusBadRequest)
 		return
 	}
 
+	// Декодирование сообщения при его наличии
 	var jsonMessageDecodedBytes []byte
-	if messageExists {
-		jsonMessageDecodedBytes, err = base64.StdEncoding.DecodeString(jsonMessageStr)
+	if decodedData.Body != "" {
+		jsonMessageDecodedBytes, err = base64.StdEncoding.DecodeString(decodedData.Body)
 		if err != nil {
 			http.Error(w, "Не удалось преобразовать тело вложенного запроса в байты.", http.StatusBadRequest)
 			return
@@ -53,7 +58,7 @@ func makeRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Создаём HTTP-запрос на указанный URL
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(jsonMessageDecodedBytes))
+	req, err := http.NewRequest(decodedData.Method, decodedData.Url, bytes.NewBuffer(jsonMessageDecodedBytes))
 	if err != nil {
 		http.Error(w, "Ошибка создания HTTP-запроса", http.StatusInternalServerError)
 		return
