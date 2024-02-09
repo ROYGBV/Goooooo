@@ -102,8 +102,6 @@ func makeSingleRequest(index int, req Request, wg *sync.WaitGroup, ch chan Respo
 		return
 	}
 
-	// reqToSend.Close = true
-
 	// Выполняем HTTP-запрос
 	client := &http.Client{}
 	response, err := client.Do(reqToSend)
@@ -203,6 +201,7 @@ func makeSingleRequestHandler(w http.ResponseWriter, r *http.Request) {
 	makeOutput(w, resArr)
 }
 
+// Вывод получившихся ответов в формате JSON
 func makeOutput(w http.ResponseWriter, resArr ResponseList) {
 	// Преобразуем структуру в JSON
 	jsonResponse, err := json.Marshal(resArr)
@@ -211,7 +210,7 @@ func makeOutput(w http.ResponseWriter, resArr ResponseList) {
 		return
 	}
 
-	// Устанавливаем заголовок Content-Type
+	// Устанавливаем заголовок
 	w.Header().Set("Content-Type", "application/json")
 
 	// Отправляем JSON-ответ клиенту
