@@ -25,8 +25,8 @@ type RequestList struct {
 // Структура содержимого канала, содержит порядковый номер запроса в исходном post запросе, код ответа, тело ответа, ошибку обработки
 type Response struct {
 	Index        int    `json:"index"`
-	ResponseCode int    `json:"responsecode"`
-	Response     string `json:"response"`
+	ResponseCode int    `json:"responseCode"`
+	ResponseBody string `json:"responseBody"`
 	Error        string `json:"error"`
 }
 
@@ -122,7 +122,7 @@ func makeSingleRequest(index int, req Request, wg *sync.WaitGroup, ch chan Respo
 
 	// Добавляем в канал код и тело ответа
 	res.ResponseCode = response.StatusCode
-	res.Response = string(respBody)
+	res.ResponseBody = string(respBody)
 	ch <- *res
 }
 
@@ -210,11 +210,13 @@ func makeOutput(w http.ResponseWriter, resArr ResponseList) {
 		return
 	}
 
+	jsonRawResponse := (*json.RawMessage)(&jsonResponse)
+
 	// Устанавливаем заголовок
 	w.Header().Set("Content-Type", "application/json")
 
 	// Отправляем JSON-ответ клиенту
-	w.Write(jsonResponse)
+	w.Write(*jsonRawResponse)
 }
 
 func main() {
