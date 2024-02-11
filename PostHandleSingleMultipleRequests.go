@@ -189,7 +189,7 @@ func makeSingleRequestHandler(w http.ResponseWriter, r *http.Request) {
 	ch := make(chan Response, 1)
 
 	// Выполняем запрос
-	go makeSingleRequest(1, decodedData, &wg, ch)
+	go makeSingleRequest(0, decodedData, &wg, ch)
 	wg.Wait()
 	close(ch)
 
